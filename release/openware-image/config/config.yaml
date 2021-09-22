@@ -1,0 +1,117 @@
+license: "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsInZlciI6InYxIiwiZW52IjoicHJvZCJ9.eyJsaWQiOiJ5cUVqYUs1NU1tIiwiZmluZXgiOnsidmVyc2lvbiI6IjMiLCJkb21haW4iOiJvcGVuZmluZXgucG9sa2FkZXgudHJhZGV8bG9jYWxob3N0IiwiZXhwaXJlIjoxNjMzNzczODIyLCJzY29wZSI6WyJ1cHN0cmVhbTpvcGVuZGF4IiwibG9jYWwiXX19.EVImQPtPeHDhdEB1LGP9Ljca2IUYhz97euzyNj8ZaaMPTuBGv54g3oAV556ayoJTdqoRK5QUEF9pBObVj_MdKw"
+database:
+  driver: mysql
+  name: finex_development
+  username: root
+  password: ""
+  host: database
+  port: 3306
+# influx:
+#   host: localhost
+#   port: 8086
+#   scheme: http
+#   database: peatio_production
+#   username: influx
+#   password: changeme
+log_level:
+  log_observer: info
+vault:
+  host: http://localhost:8200
+  token: changeme
+  app_name: peatio
+messaging:
+  driver: amqp
+  username: guest
+  password: guest
+  host: rabbitmq
+  port: 5672
+orderbook:
+  publishers: 4
+  size_limit: 25
+gateway:
+  rate:
+    maker:
+      - limit: 500
+        period: 10s
+    admin:
+      - limit: 500
+        period: 10s
+    superadmin:
+      - limit: 500
+        period: 10s
+    bench:
+      - limit: 9000
+        period: 1s
+    default:
+      - limit: 50
+        period: 10s
+      - limit: 10000
+        period: 24h
+api:
+  bulk_limit: 100
+  rate:
+    maker:
+      limit: 500
+      period: 10s
+    admin:
+      limit: 500
+      period: 10s
+    superadmin:
+      limit: 500
+      period: 10s
+    default:
+      limit: 5
+      period: 1s
+actions:
+  trade:
+    min_level: 1
+    roles: [member, broker, trader, maker, admin, superadmin]
+  bulk_api:
+    min_level: 3
+    roles: [maker, admin, superadmin]
+  admin:
+    min_level: 3
+    roles: [admin, superadmin]
+  admin_orders:
+    min_level: 3
+    roles: [admin, superadmin]
+  admin_deposits:
+    min_level: 3
+    roles: [admin, superadmin]
+  admin_withdrawals:
+    min_level: 3
+    roles: [admin, superadmin]
+  skip_balance_check:
+    roles: [member, broker, trader, maker, admin, superadmin]
+  # filters:
+  #   # Example of configuration applied to all markets of one quote currecncy except one
+  #   - type: custom_price_steps
+  #     markets:
+  #       exclude:
+  #         - base: usdt
+  #       include:
+  #         - quote: krw
+  #     rules:
+  #       - { limit: 10, step: 0.01 }
+  #       - { limit: 100, step: 0.1 }
+  #       - { limit: 1000, step: 1 }
+  #       - { limit: 10000, step: 5 }
+  #       - { limit: 100000, step: 10 }
+  #       - { limit: 500000, step: 50 }
+  #       - { limit: 1000000, step: 100 }
+  #       - { limit: 2000000, step: 500 }
+  #       - { limit: 0, step: 1000 }
+  #   # Example of configuration applied to one market only
+  #   - type: custom_price_steps
+  #     markets:
+  #       include:
+  #         - id: usdtkrw
+  #     rules:
+  #       - { limit: 0, step: 1 }
+  #   # Example of Significant digits filter
+  #   - type: significant_digits
+  #     markets:
+  #       include:
+  #         - quote: usd
+  #         - quote: btc
+  #     digits: 5

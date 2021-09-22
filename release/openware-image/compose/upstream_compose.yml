@@ -1,0 +1,87 @@
+version: "3"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.8-management
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  database:
+    image: mysql:5.7
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./structure.sql:/docker-entrypoint-initdb.d/dump.sql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: finex_development
+
+  vault:
+    image: vault:1.6.1
+    ports:
+      - "8200:8200"
+    environment:
+      SKIP_SETCAP: 1
+      VAULT_TOKEN: changeme
+      VAULT_DEV_ROOT_TOKEN_ID: changeme
+      VAULT_ADDR: http://vault:8200
+
+  engine:
+    image: finex:polkadex
+    restart: always
+    command: ./finex spot
+    volumes:
+      - ../config/config.yaml:/app/config/config.yaml
+
+  api:
+    image: finex:polkadex
+    command: ./orderapi
+    restart: always
+    environment:
+      FINEX_GRPC_HOST: engine:50051
+    ports:
+      - "8001:8080"
+    volumes:
+      - ../config/rsa-key.pub:/app/config/rsa-key.pub
+      - ../config/config.yaml:/app/config/config.yaml
+
+  barong:
+    image: quay.io/openware/barong:3.1.0-e1dd9e3
+    environment:
+      - LOG_LEVEL=debug
+      - DATABASE_HOST=database
+      - BARONG_VAULT_ADDRESS=http://vault:8200
+      - BARONG_VAULT_TOKEN=changeme
+      - BARONG_EVENT_API_RABBITMQ_HOST=rabbitmq
+      - BARONG_EVENT_API_RABBITMQ_PORT=5672
+      - BARONG_EVENT_API_RABBITMQ_USERNAME=guest
+      - BARONG_EVENT_API_RABBITMQ_PASSWORD=guest
+      - BARONG_AUTH_METHODS=password,apikey,signature
+      - BARONG_REDIS_URL=redis://redis:6379/1
+      - JWT_PRIVATE_KEY_PATH=/app/config/rsa-key
+      - SECRET_KEY_BASE=hmmmmmmmmmmmmmmm
+    volumes:
+      - ../config/rsa-key:/app/config/rsa-key
+      - ./cloudflare_ips.yml:/home/app/config/cloudflare_ips.yml
+
+  gateway:
+    restart: always
+    image: envoyproxy/envoy:v1.10.0
+    volumes:
+      - ./gateway.yml:/etc/envoy/envoy.yaml
+    command: /usr/local/bin/envoy -l debug -c /etc/envoy/envoy.yaml
+    ports:
+      - "8000:80"
+
+  redis:
+    image: redis:4.0
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+
+volumes:
+  rabbitmq_data:
+  db_data:
+  redis_data:

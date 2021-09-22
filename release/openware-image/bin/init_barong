@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+docker-compose -f compose/upstream_compose.yml run --rm barong bundle exec rake db:create db:migrate db:seed
+
